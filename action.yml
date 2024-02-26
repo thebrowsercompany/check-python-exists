@@ -1,0 +1,24 @@
+name: 'Check that Python is available'
+description: 'Verify that the desired Python version is available on the running host.'
+
+inputs:
+  python-version:
+    description: "Exact version of Python."
+  is-self-hosted:
+    description: "Boolean indicating if the runner is self hosted or not, defaults to true."
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: GHA setup-python for GH hosted runner
+      if: inputs.is-self-hosted != 'true'
+      uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # 5.0.0
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Check Python exists on path already for self-hosted runner
+      if: inputs.is-self-hosted == 'true'
+      shell: bash
+      run:
+        command -v python${{ inputs.python-version }} > /dev/null 2>&1
