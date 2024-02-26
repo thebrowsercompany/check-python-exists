@@ -9,16 +9,32 @@ inputs:
     required: false
     default: 'true'
 
+outputs:
+  python-version:
+    description: "The actual version of Python selected."
+    value: ${{ steps.finalize.outputs.python-version }}
+
 runs:
   using: 'composite'
   steps:
     - name: GHA setup-python for GH hosted runner
+      id: gha-setup-python
       if: inputs.is-self-hosted != 'true'
       uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # 5.0.0
       with:
         python-version: ${{ inputs.python-version }}
     - name: Check Python exists on path already for self-hosted runner
+      id: bcny-check-python
       if: inputs.is-self-hosted == 'true'
       shell: bash
-      run:
+      run: |
         command -v python${{ inputs.python-version }} > /dev/null 2>&1
+    - name: Finalize output
+      id: finalize
+      shell: bash
+      run: |
+        if [[ "${{ inputs.is-self-hosted }}" == "true" ]]; then
+          echo "python-version=${{ inputs.python-version }}" >> $GITHUB_OUTPUT
+        else
+          echo "python-version=${{ steps.gha-setup-pyton.outputs.python-version }}" >> $GITHUB_OUTPUT
+        fi
