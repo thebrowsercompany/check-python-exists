@@ -31,31 +31,22 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
     - name: Check Python exists on path already for self-hosted runner
-      id: bcny-check-python
-      if: inputs.is-self-hosted == 'true'
-      shell: bash
-      run: |
-        EXPECTED_VERSION=""
-        if [[ -n "${{ inputs.python-version }}" ]]; then
-          EXPECTED_VERSION="${{ inputs.python-version }}"
-        else
-          if [[ -f "${{ inputs.python-version-file }}" ]]; then
-            EXPECTED_VERSION="$(cat "${{ inputs.python-version-file }}" | cut -d' ' -f1)"
-          fi
-        fi
-
-        command -v python$EXPECTED_VERSION > /dev/null 2>&1
-        EXPECTED_PYTHON_PATH="$(which python${EXPECTED_VERSION})"
-        echo "python-version=${EXPECTED_VERSION}" >> $GITHUB_OUTPUT
-        echo "python-path=${EXPECTED_PYTHON_PATH}" >> $GITHUB_OUTPUT
-    - name: Finalize output
       id: finalize
       shell: bash
       run: |
-        if [[ "${{ inputs.is-self-hosted }}" == "true" ]]; then
+        if [[ "${{ inputs.is-self-hosted }}" != "true" ]]; then
           echo "python-version=${{ steps.bcny-check-python.outputs.python-version }}" >> $GITHUB_OUTPUT
           echo "python-path=${{ steps.bcny-check-python.outputs.python-path }}" >> $GITHUB_OUTPUT
         else
-          echo "python-version=${{ steps.gha-setup-python.outputs.python-version }}" >> $GITHUB_OUTPUT
-          echo "python-path=${{ steps.gha-setup-python.outputs.python-path }}" >> $GITHUB_OUTPUT
+          EXPECTED_VERSION=""
+          if [[ -n "${{ inputs.python-version }}" ]]; then
+            EXPECTED_VERSION="${{ inputs.python-version }}"
+          elif [[ -f "${{ inputs.python-version-file }}" ]]; then
+            EXPECTED_VERSION="$(cat "${{ inputs.python-version-file }}" | cut -d' ' -f1)"
+          fi
+
+          command -v python$EXPECTED_VERSION > /dev/null 2>&1
+          EXPECTED_PYTHON_PATH="$(which python${EXPECTED_VERSION})"
+          echo "python-version=${EXPECTED_VERSION}" >> $GITHUB_OUTPUT
+          echo "python-path=${EXPECTED_PYTHON_PATH}" >> $GITHUB_OUTPUT
         fi
