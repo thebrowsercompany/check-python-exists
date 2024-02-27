@@ -3,7 +3,11 @@ description: 'Verify that the desired Python version is available on the running
 
 inputs:
   python-version:
-    description: "Exact version of Python."
+    description: "Exact version of Python. Will override any .python-version file provided either by default or in the python-version-file parameter."
+    default: ''
+  python-version-file:
+    description: "Path to the .python-version file to use to select the desired Python version. This does not support the full flexibility of the .python-version specification but instead only supports a single line in the file with only a single version on that line. Anything else is undefined."
+    default: '.python-version'
   is-self-hosted:
     description: "Boolean indicating if the runner is self hosted or not, defaults to true."
     required: false
@@ -13,6 +17,9 @@ outputs:
   python-version:
     description: "The actual version of Python selected."
     value: ${{ steps.finalize.outputs.python-version }}
+  python-path:
+    description: "The path to the expected Python executable."
+    value: ${{ steps.finalize.outputs.python-path }}
 
 runs:
   using: 'composite'
@@ -28,13 +35,27 @@ runs:
       if: inputs.is-self-hosted == 'true'
       shell: bash
       run: |
-        command -v python${{ inputs.python-version }} > /dev/null 2>&1
+        EXPECTED_VERSION=""
+        if [[ -n "${{ inputs.python-version }}" ]]; then
+          EXPECTED_VERSION="${{ inputs.python-version }}"
+        else
+          if [[ -f "${{ inputs.python-version-file }}" ]]; then
+            EXPECTED_VERSION="$(cat "${{ inputs.python-version-file }}" | cut -d' ' -f1)"
+          fi
+        fi
+
+        command -v python$EXPECTED_VERSION > /dev/null 2>&1
+        EXPECTED_PYTHON_PATH="$(which python${EXPECTED_VERSION})"
+        echo "python-version=${EXPECTED_VERSION}" >> $GITHUB_OUTPUT
+        echo "python-path=${EXPECTED_PYTHON_PATH}" >> $GITHUB_OUTPUT
     - name: Finalize output
       id: finalize
       shell: bash
       run: |
         if [[ "${{ inputs.is-self-hosted }}" == "true" ]]; then
-          echo "python-version=${{ inputs.python-version }}" >> $GITHUB_OUTPUT
+          echo "python-version=${{ steps.bcny-check-python.outputs.python-version }}" >> $GITHUB_OUTPUT
+          echo "python-path=${{ steps.bcny-check-python.outputs.python-path }}" >> $GITHUB_OUTPUT
         else
-          echo "python-version=${{ steps.gha-setup-pyton.outputs.python-version }}" >> $GITHUB_OUTPUT
+          echo "python-version=${{ steps.gha-setup-python.outputs.python-version }}" >> $GITHUB_OUTPUT
+          echo "python-path=${{ steps.gha-setup-python.outputs.python-path }}" >> $GITHUB_OUTPUT
         fi
