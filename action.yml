@@ -30,7 +30,7 @@ runs:
       uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # 5.0.0
       with:
         python-version: ${{ inputs.python-version }}
-    - name: Check Python exists on path already for self-hosted runner
+    - name: Check desired Python is available and set outputs
       id: finalize
       shell: bash
       run: |
