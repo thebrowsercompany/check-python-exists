@@ -26,7 +26,8 @@ runs:
   steps:
     - name: GHA setup-python for GH hosted runner
       id: gha-setup-python
-      if: inputs.is-self-hosted != 'true'
+      # We want to run this on anything but on self-hosted macs.
+      if: inputs.is-self-hosted == 'false' || runner.os != 'macOS'
       uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # 5.0.0
       with:
         python-version: ${{ inputs.python-version }}
@@ -34,9 +35,12 @@ runs:
       id: finalize
       shell: bash
       run: |
-        if [[ "${{ inputs.is-self-hosted }}" != "true" ]]; then
-          echo "python-version=${{ steps.bcny-check-python.outputs.python-version }}" >> $GITHUB_OUTPUT
-          echo "python-path=${{ steps.bcny-check-python.outputs.python-path }}" >> $GITHUB_OUTPUT
+        if [[ "${{ steps.gha-setup-python.outcome }}" == "success" ]]; then
+          # On macOS, we want something like python3.11, not python3.11.8 like
+          # what setup-python above will output.
+          # On Windows, we sadly just want python3.
+          EXPECTED_VERSION="$(python3 -c "import sys;print('.'.join(sys.argv[1].rsplit('.',3)[:1 if sys.platform=='win32' else 2]))" ${{ steps.gha-setup-python.outputs.python-version }})"
+          EXPECTED_PYTHON_PATH="${{ steps.gha-setup-python.outputs.python-path }}"
         else
           EXPECTED_VERSION=""
           if [[ -n "${{ inputs.python-version }}" ]]; then
@@ -47,6 +51,6 @@ runs:
 
           command -v python$EXPECTED_VERSION > /dev/null 2>&1
           EXPECTED_PYTHON_PATH="$(which python${EXPECTED_VERSION})"
-          echo "python-version=${EXPECTED_VERSION}" >> $GITHUB_OUTPUT
-          echo "python-path=${EXPECTED_PYTHON_PATH}" >> $GITHUB_OUTPUT
         fi
+        echo "python-version=${EXPECTED_VERSION}" >> $GITHUB_OUTPUT
+        echo "python-path=${EXPECTED_PYTHON_PATH}" >> $GITHUB_OUTPUT
