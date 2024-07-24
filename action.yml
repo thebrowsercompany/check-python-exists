@@ -46,6 +46,13 @@ runs:
           curl -O "https://www.python.org/ftp/python/${Version}/${Name}.zip"
           Expand-Archive "${Name}.zip"
           echo "${PWD}\${Name}" >> $GITHUB_PATH
+
+          # Some xplat code uses `python3` because that is the executable name on Unix/macOS
+          New-Item -Path python3.exe -ItemType SymbolicLink -Value python.exe -ErrorAction Ignore
+
+          # Remove any app execution aliases (redirecting to the Windows Store) which may conflict in the Path
+          Remove-Item "$Env:LocalAppData\Microsoft\WindowsApps\python.exe" -Force -ErrorAction Ignore | Out-Null
+          Remove-Item "$Env:LocalAppData\Microsoft\WindowsApps\python3.exe" -Force -ErrorAction Ignore | Out-Null
         } else {
           Write-Host "Please fix hack for python on Windows/ARM64. Maybe https://github.com/actions/setup-python/issues/715 has been fixed."
           Exit 1
