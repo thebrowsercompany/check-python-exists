@@ -48,7 +48,7 @@ runs:
           echo "${PWD}\${Name}" >> $GITHUB_PATH
 
           # Some xplat code uses `python3` because that is the executable name on Unix/macOS
-          New-Item -Path python3.exe -ItemType SymbolicLink -Value python.exe -ErrorAction Ignore
+          New-Item -Path "${Name}\python3.exe" -ItemType SymbolicLink -Value "python.exe" -ErrorAction Ignore
 
           # Remove any app execution aliases (redirecting to the Windows Store) which may conflict in the Path
           Remove-Item "$Env:LocalAppData\Microsoft\WindowsApps\python.exe" -Force -ErrorAction Ignore | Out-Null
