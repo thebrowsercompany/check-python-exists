@@ -26,46 +26,16 @@ runs:
   steps:
     - name: GHA setup-python for GH hosted runner
       id: gha-setup-python
-      # We want to run this on anything but on self-hosted macs and Windows
-      # ARM64.
-      if: (inputs.is-self-hosted == 'false' || runner.os != 'macOS') && !(runner.os == 'Windows' && runner.arch == 'ARM64')
-      uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # 5.0.0
+      # We want to run this on anything but on self-hosted macs.
+      if: !(inputs.is-self-hosted == 'true' && runner.os == 'macOS')
+      uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # 5.3.0
       with:
         python-version: ${{ inputs.python-version }}
-    - name: "Python for Windows/arm64"
-      id: win-arm64-setup
-      if: runner.os == 'Windows' && runner.arch == 'ARM64'
-      shell: pwsh
-      run: |
-        # Temporary hack until https://github.com/actions/setup-python/issues/715 is
-        # fixed. python win-arm64 has to be added to
-        # https://github.com/actions/python-versions/blob/main/versions-manifest.json
-        if ((Get-Content "${{ inputs.python-version-file }}") -eq "3.11") {
-          $Version = "3.11.9"
-          $Name = "python-${Version}-embed-arm64"
-          curl -O "https://www.python.org/ftp/python/${Version}/${Name}.zip"
-          Expand-Archive "${Name}.zip"
-          echo "${PWD}\${Name}" >> $GITHUB_PATH
-
-          # Some xplat code uses `python3` because that is the executable name on Unix/macOS
-          New-Item -Path "${Name}\python3.exe" -ItemType SymbolicLink -Value "python.exe" -ErrorAction Ignore
-
-          # Remove any app execution aliases (redirecting to the Windows Store) which may conflict in the Path
-          Remove-Item "$Env:LocalAppData\Microsoft\WindowsApps\python.exe" -Force -ErrorAction Ignore | Out-Null
-          Remove-Item "$Env:LocalAppData\Microsoft\WindowsApps\python3.exe" -Force -ErrorAction Ignore | Out-Null
-        } else {
-          Write-Host "Please fix hack for python on Windows/ARM64. Maybe https://github.com/actions/setup-python/issues/715 has been fixed."
-          Exit 1
-        }
     - name: Check desired Python is available and set outputs
       id: finalize
       shell: bash
       run: |
-        if [[ "${{ steps.win-arm64-setup.outcome }}" == "success" ]]; then
-          EXPECTED_VERSION="3"
-          command -v python$EXPECTED_VERSION > /dev/null 2>&1
-          EXPECTED_PYTHON_PATH="$(which python${EXPECTED_VERSION})"
-        elif [[ "${{ steps.gha-setup-python.outcome }}" == "success" ]]; then
+        if [[ "${{ steps.gha-setup-python.outcome }}" == "success" ]]; then
           # On macOS, we want something like python3.11, not python3.11.8 like
           # what setup-python above will output.
           # On Windows, we sadly just want python3.
