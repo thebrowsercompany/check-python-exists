@@ -40,7 +40,7 @@ runs:
         if [[ -z "${{ inputs.python-version }}" ]]; then
           # python3 --version will report e.g. Python 3.9.13. This string is cut using a space delimiter, and the second field is selected.
           INSTALLED_VERSION=$(python3 --version | cut -d' ' -f2)
-          INSTALLED_PATH=$(where python3)
+          INSTALLED_PATH=$(which python3)
         else
           INSTALLED_VERSION="${{ steps.gha-setup-python.outputs.python-version }}"
           INSTALLED_PATH="${{ steps.gha-setup-python.outputs.python-path }}"
