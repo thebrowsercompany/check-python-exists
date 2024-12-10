@@ -42,8 +42,8 @@ runs:
           INSTALLED_VERSION=$(python3 --version | cut -d' ' -f2)
           INSTALLED_PATH=$(where python3)
         else
-          INSTALLED_VERSION="${{ steps.gha-setup-python.outputs.python-version }}""
-          INSTALLED_PATH="${{ steps.gha-setup-python.outputs.python-path }}""
+          INSTALLED_VERSION="${{ steps.gha-setup-python.outputs.python-version }}"
+          INSTALLED_PATH="${{ steps.gha-setup-python.outputs.python-path }}"
         fi
 
         if [[ "${{ steps.gha-setup-python.outcome }}" == "success" ]]; then
