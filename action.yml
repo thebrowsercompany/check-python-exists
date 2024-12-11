@@ -44,7 +44,7 @@ runs:
           $Version = "3.11.9"
           $Name = "python-${Version}-embed-arm64"
           curl -O "https://www.python.org/ftp/python/${Version}/${Name}.zip"
-          Expand-Archive "${Name}.zip"
+          Expand-Archive "${Name}.zip" -Force
           echo "${PWD}\${Name}" >> $GITHUB_PATH
 
           # Some xplat code uses `python3` because that is the executable name on Unix/macOS
