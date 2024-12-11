@@ -40,7 +40,7 @@ runs:
         # Temporary hack until https://github.com/actions/setup-python/issues/715 is
         # fixed. python win-arm64 has to be added to
         # https://github.com/actions/python-versions/blob/main/versions-manifest.json
-        if (("${{ inputs.python-version }}" -eq "3.11") -or (Test-Path "${{ inputs.python-version-file }}") -and ((Get-Content "${{ inputs.python-version-file }}") -eq "3.11")) {
+        if (("${{ inputs.python-version }}" -eq "3.11") -or ((Test-Path "${{ inputs.python-version-file }}") -and ((Get-Content "${{ inputs.python-version-file }}") -eq "3.11"))) {
           $Version = "3.11.9"
           $Name = "python-${Version}-embed-arm64"
           curl -O "https://www.python.org/ftp/python/${Version}/${Name}.zip"
